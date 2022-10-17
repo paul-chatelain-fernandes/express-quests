@@ -29,7 +29,24 @@ const getMovieById = (req, res) => {
     });
 };
 
+const postMovie = (req, res) => {
+  const { title, director, year, color, duration } = req.body;
+
+  database
+    .query(
+      "insert into movies(title, director, year, color, duration) values (?,?,?,?,?)",
+      [title, director, year, color, duration]
+    )
+    .then(([result]) => {
+      res.location(`/api/movies/${result.insertId}`).sendStatus(201);
+    })
+    .catch((err) => {
+      res.status(500).send("Error posting data into database");
+    });
+};
+
 module.exports = {
   getMovies,
   getMovieById,
+  postMovie,
 };
