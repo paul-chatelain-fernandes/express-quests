@@ -1,6 +1,6 @@
 const database = require("./database");
 
-const getMovies = (req, res) => {
+const getMovies = (_, res) => {
   database
     .query("select * from movies")
     .then(([movies]) => {
@@ -66,9 +66,27 @@ const updateMovie = (req, res) => {
     });
 };
 
+const deleteMovie = (req, res) => {
+  const id = parseInt(req.params.id);
+
+  database
+    .query("delete from movies where id = ?", [id])
+    .then(([movie]) => {
+      if (movie.affectedRows === 0) {
+        res.status(404).send("Not found data")
+      } else {
+        res.sendStatus(204);
+      }
+    })
+    .catch((err) => {
+      res.status(500).send("Error deleting data from database");
+    });
+};
+
 module.exports = {
   getMovies,
   getMovieById,
   postMovie,
   updateMovie,
+  deleteMovie
 };
