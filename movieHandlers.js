@@ -1,8 +1,32 @@
 const database = require("./database");
 
-const getMovies = (_, res) => {
+const getMovies = (req, res) => {
+  let initialSql = "select * from movies";
+  const where = [];
+
+  if (req.query.color != null) {
+    where.push({
+      column: "color",
+      value: req.query.color,
+      operator: "=",
+    });
+  }
+  if (req.query.max_duration != null) {
+    where.push({
+      column: "duration",
+      value: req.query.max_duration,
+      operator: "<=",
+    });
+  }
   database
-    .query("select * from movies")
+    .query(
+      where.reduce(
+        (sql, { column, operator }, index) =>
+          `${sql} ${index === 0 ? "where" : "and"} ${column} ${operator} ?`,
+        initialSql
+      ),
+      where.map(({ value }) => value)
+    )
     .then(([movies]) => {
       res.status(200).json(movies);
     })
@@ -73,7 +97,7 @@ const deleteMovie = (req, res) => {
     .query("delete from movies where id = ?", [id])
     .then(([movie]) => {
       if (movie.affectedRows === 0) {
-        res.status(404).send("Not found data")
+        res.status(404).send("Not found data");
       } else {
         res.sendStatus(204);
       }
@@ -88,5 +112,5 @@ module.exports = {
   getMovieById,
   postMovie,
   updateMovie,
-  deleteMovie
+  deleteMovie,
 };
