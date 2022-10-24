@@ -1,7 +1,30 @@
+const { nextTick } = require("process");
 const database = require("./database");
 
+const getUserByEmailWithPasswordAndPassToNext = (req, res, next) => {
+  const { email } = req.body;
+
+  database
+    .query("select id, email, hashedPassword from users where email = ?", [
+      email,
+    ])
+    .then(([users]) => {
+      if (users[0] != null) {
+        req.user = users[0];
+        next();
+      } else {
+        res.sendStatus(401);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Error retrieving data from database");
+    });
+};
+
 const getUsers = (req, res) => {
-  let initialSql = "select id, firstname, lastname, email, city, language from users";
+  let initialSql =
+    "select id, firstname, lastname, email, city, language from users";
   const where = [];
 
   if (req.query.language != null) {
@@ -41,7 +64,10 @@ const getUserById = (req, res) => {
   const id = parseInt(req.params.id);
 
   database
-    .query("select id, firstname, lastname, email, city, language from users where id = ?", [id])
+    .query(
+      "select id, firstname, lastname, email, city, language from users where id = ?",
+      [id]
+    )
     .then(([user]) => {
       if (user[0] != null) {
         res.status(200).json(user[0]);
@@ -111,6 +137,7 @@ const deleteUser = (req, res) => {
 };
 
 module.exports = {
+  getUserByEmailWithPasswordAndPassToNext,
   getUsers,
   getUserById,
   postUser,
